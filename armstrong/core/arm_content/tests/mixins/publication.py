@@ -5,6 +5,7 @@ from .._utils import *
 from ..arm_content_support.models import ConcreteArticle
 
 import datetime
+import time
 
 class PublicationManagerTestCase(ArmContentTestCase):
     def test_published_manager_only_pulls_published_content(self):
@@ -21,3 +22,11 @@ class PublicationManagerTestCase(ArmContentTestCase):
         self.assertTrue(published in all_published)
         self.assertTrue(not draft_art in all_published)
         self.assertTrue(not scheduled in all_published)
+
+    def test_published_manager_uses_fresh_datetime(self):
+        published_qs = ConcreteArticle.published.all()
+        time.sleep(1)
+        new_article = ConcreteArticle.objects.create(
+            title="Published After QuerySet Generation",
+            pub_date=datetime.datetime.now(), pub_status='P')
+        self.assertIn(new_article, published_qs._clone())
